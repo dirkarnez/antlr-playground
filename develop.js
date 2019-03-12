@@ -9,10 +9,10 @@ const option = {
     }
 };
 
-var watcher = chokidar.watch('Calculator.g4');
+var watcher = chokidar.watch('RMLang.g4');
   
 function generate(callback) {
-    child_process.exec("java org.antlr.v4.Tool -Dlanguage=JavaScript Calculator.g4 -no-listener -visitor -o antlr-build", option, callback);
+    child_process.exec("java org.antlr.v4.Tool -Dlanguage=JavaScript RMLang.g4 -no-listener -visitor -o antlr-build", option, callback);
 }
 
 generate(function(err) {

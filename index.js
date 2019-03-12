@@ -1,16 +1,17 @@
 const antlr4 = require('antlr4/index');
-const CalculatorLexer = require('./antlr-build/CalculatorLexer');
-const CalculatorParser = require('./antlr-build/CalculatorParser');
-var formulaVisitor = require('./FormulaVisitor.js').FormulaVisitor;
+const RMLangLexer = require('./antlr-build/RMLangLexer');
+const RMLangParser = require('./antlr-build/RMLangParser');
+const RMLangVisitor = require('./antlr-build/RMLangVisitor');
 
-var input = "1 + 2 + 4 + 3";
+// var formulaVisitor = require('./FormulaVisitor.js').FormulaVisitor;
+
+var input = "USE CEA; CREATE EDE;RELATE EEd sFF;DECLARE EE = {e: VARCHAR, f: Number};";
 var chars = new antlr4.InputStream(input);
-var lexer = new CalculatorLexer.CalculatorLexer(chars);
+var lexer = new RMLangLexer.RMLangLexer(chars);
 var tokens  = new antlr4.CommonTokenStream(lexer);
-var parser = new CalculatorParser.CalculatorParser(tokens);
+var parser = new RMLangParser.RMLangParser(tokens);
 parser.buildParseTrees = true;  
-var tree = parser.calculator();
+var tree = parser.prog();
 
-var visitor = new formulaVisitor();
-var visitorResult = visitor.visitCalculator(tree);
-console.log(JSON.stringify(visitorResult));
+var visitor = new RMLangVisitor.RMLangVisitor();
+console.log(JSON.stringify(visitor.visitProg(tree)));
