@@ -18,7 +18,8 @@
   },
   "homepage": "https://github.com/dirkarnez/AntlrPlayground#readme",
   "devDependencies": {
-    "chokidar": "^2.1.2"
+    "chokidar": "^2.1.2",
+    "commander": "^2.19.0"
   },
   "dependencies": {
     "antlr4": "^4.7.2"

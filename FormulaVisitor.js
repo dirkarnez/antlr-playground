@@ -4,6 +4,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+
 var visitor = require('./antlr-build/RMLangVisitor');
 // This class defines a complete visitor for a parse tree produced by the CalculatorParser.
 var FormulaVisitor = (function (_super) {
@@ -11,48 +12,53 @@ var FormulaVisitor = (function (_super) {
     function FormulaVisitor() {
         _super.apply(this, arguments);
     }
-        
+
     // Visit a parse tree produced by RMLangParser#prog.
     FormulaVisitor.prototype.visitProg = function(context) {
-        var expr;
-        var i = 0;
-        while (expr = context.expr(i)) {
-            expr.accept(this);
-            i++;
-        }
+        return context
+                .expr()
+                .map(expr => expr.accept(this))
+                .filter(command => !!command)
+                .join("\n\n");
     };
   
     // Visit a parse tree produced by RMLangParser#expr.
     FormulaVisitor.prototype.visitExpr = function(context) {
         if (context.USE()) {
-            console.log(`visitExpr ${context.USE()} ${context.STRING()}`);
+            this.tableSchema = context.STRING();
         } else if (context.CREATE()) {
-            console.log(`visitExpr ${context.CREATE()} ${context.STRING()}`);
+            var variableName = context.STRING();
+            var declaration = (this.declarations || {})[variableName];
+            if (declaration) {
+                return `CREATE TABLE ${variableName} ${declaration}`;
+            } else {
+                throw new Error("not defined");
+            }
         } else if (context.RELATE()) {
-            console.log(`visitExpr ${context.RELATE()} ${context.STRING(0)} ${context.STRING(1)}`);
+            return `ALTER TABLE ${context.STRING(0)}
+    ADD CONSTRAINT FK_JOIN_BILLING_CATEGORY
+        FOREIGN KEY (CATEGORY_ID)
+            REFERENCES ${context.STRING(1)} (ID)
+;`
         } else if (context.DECLARE()) {
-            context.tableSchema().accept(this);
-            console.log(`visitExpr ${context.DECLARE()} ${context.STRING()}`);
+            this.declarations = {
+                ...(this.declarations || {}), 
+                [context.STRING()]: context.tableSchema().accept(this)
+            };
         }
-      // return //context.accept();
     };
   
     // Visit a parse tree produced by RMLangParser#tableSchema.
     FormulaVisitor.prototype.visitTableSchema = function(context) {
-        var pair;
-        var i = 0;
-        while (pair = context.pair(i)) {
-            pair.accept(this);
-            i++;
-        }
+        return `(\n${context.pair().map(pair => pair.accept(this)).join(",\n")}\n)`;
     };
   
     // Visit a parse tree produced by RMLangParser#pair.
     FormulaVisitor.prototype.visitPair = function(context) {
         if (context.VARCHAR()) {
-            console.log(`visitPair ${context.STRING()} ${context.VARCHAR()}`);
+            return `  ${context.STRING()}                          ${context.VARCHAR()} NOT NULL`;
         } else if (context.NUMBER()) {
-            console.log(`visitPair ${context.STRING()} ${context.NUMBER()}`);
+            return `  ${context.STRING()}                          ${context.NUMBER()} NOT NULL, `;
         }
     };
 
