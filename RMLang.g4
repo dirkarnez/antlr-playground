@@ -1,6 +1,7 @@
 grammar RMLang;
 	
 prog:	(expr ';' NEWLINE?)+ ;
+
 expr:	USE STRING
     |   CREATE STRING
     |   RELATE STRING STRING
