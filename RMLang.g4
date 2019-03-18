@@ -1,30 +1,47 @@
 grammar RMLang;
 	
-prog:	(expr ';' NEWLINE?)+ ;
+prog:	(expr ';' NEWLINE*)+;
 
-expr:	USE STRING
-    |   CREATE STRING
-    |   RELATE STRING STRING
-    |   DECLARE STRING '=' tableSchema
+expr: DECLARE DECLARATION '=' tableSchema
+    | USING DECLARATION '{' createStatementList '}'
+    | CREATE DECLARATION
     ;
+
+createStatementList:  (CREATE DECLARATION NEWLINE* ';' NEWLINE*)+;
 
 tableSchema
-    : '{' pair (',' pair)* '}'
-    |   '{' '}' // empty object
+    : '{' pair (',' pair)* NEWLINE* '}'
+    |   '{' NEWLINE* '}' // empty object
     ;
 
-pair:  STRING ':' (VARCHAR | NUMBER) ;
+pair:  DECLARATION ':' 
+    ( VARCHAR '(' size ')' 
+    | VARCHAR2 '(' size ')'
+    | RAW '(' size ')'
+    | NUMBER'(' size ')'
+    | DATE
+    );
 
+size: INT (',' INT)?;
+
+DECLARE: [Dd][Ee][Cc][Ll][Aa][Rr][Ee];
+VARCHAR: [Vv][Aa][Rr][Cc][Hh][Aa][Rr];
+VARCHAR2: [Vv][Aa][Rr][Cc][Hh][Aa][Rr][2];
+RAW: [Rr][Aa][Ww];
+NUMBER: [Nn][Uu][Mm][Bb][Ee][Rr];
+DATE: [Dd][Aa][Tt][Ee];
+USING: [Uu][Ss][Ii][Nn][Gg];
+CREATE:	[Cc][Rr][Ee][Aa][Tt][Ee];
+DECLARATION: [a-zA-Z_]+;
+INT: [0-9]+;
 
 NEWLINE : [\r\n]+;
-USE: [Uu][Ss][Ee];
-VARCHAR: [Vv][Aa][Rr][Cc][Hh][Aa][Rr];
-NUMBER: [Nn][Uu][Mm][Bb][Ee][Rr];
-DECLARE: [Dd][Ee][Cc][Ll][Aa][Rr][Ee];
-CREATE:	[Cc][Rr][Ee][Aa][Tt][Ee];
-RELATE:	[Rr][Ee][Ll][Aa][Tt][Ee];
-STRING: [a-zA-Z]+;
-WS  :   [ \t\n\r]+ -> skip ;
+
+
+WS  :   [ \t\r\n]+ -> skip ;
+BLOCK_COMMENT 
+    : NEWLINE* '/*' .*? '*/' NEWLINE* -> skip
+    ;
 
 
 

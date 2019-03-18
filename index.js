@@ -25,7 +25,11 @@ program
         var tree = parser.prog();
         
         var visitor = new formulaVisitor();
-        console.log(visitor.visitProg(tree));
+        try {
+            console.log(visitor.visitProg(tree));
+        } catch(e) {
+            console.log(e);
+        }
     });
     
 program.parse(process.argv);
