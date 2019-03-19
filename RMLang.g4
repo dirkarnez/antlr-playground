@@ -2,10 +2,12 @@ grammar RMLang;
 	
 prog:	(expr ';' NEWLINE*)+;
 
-expr: DECLARE DECLARATION '=' tableSchema
+expr: annotation DECLARE DECLARATION '=' tableSchema
     | USING DECLARATION '{' createStatementList '}'
     | CREATE DECLARATION
     ;
+
+annotation: ('@' PK_ANNOTATION '(' DECLARATION ')' NEWLINE*)?;
 
 createStatementList:  (CREATE DECLARATION NEWLINE* ';' NEWLINE*)+;
 
@@ -23,7 +25,7 @@ pair:  DECLARATION ':'
     );
 
 size: INT (',' INT)?;
-
+PK_ANNOTATION: [Pp][Kk];
 DECLARE: [Dd][Ee][Cc][Ll][Aa][Rr][Ee];
 VARCHAR: [Vv][Aa][Rr][Cc][Hh][Aa][Rr];
 VARCHAR2: [Vv][Aa][Rr][Cc][Hh][Aa][Rr][2];

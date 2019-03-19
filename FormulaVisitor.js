@@ -25,13 +25,29 @@ var FormulaVisitor = (function (_super) {
     };
 
     FormulaVisitor.prototype.createTable = function(tableName, pairs) {
-        var longest = Math.max(...pairs.map(item => item.name.length));
-        var lines = pairs.map(item => {
+        var fields = pairs.filter(pair => pair.name && pair.type);
+        var longest = Math.max(...fields.map(item => item.name.length));
+        var lines = fields.map(item => {
             var offset = longest - item.name.length + this.gap;
             return `\t${item.name}${new Array(offset).fill(" ").join("")}${item.type}`;
         });
+
+        var annotations = pairs
+            .filter(pair => !!pair.PK);
+
+        if (annotations.forEach(annotation => {
+            var pk = annotation.PK;
+            if (!fields.find(field => field.name == pk)) {
+                throw `${pk} does not exist in annotated table declaration`;
+            }
+        }));
+
+        var constraints = annotations
+            .map(annotation => `\tCONSTRAINT PK_${tableName} PRIMARY KEY (${annotation.PK})`);
+
+
         this.addToCreateHistory(tableName);
-        return `CREATE TABLE ${tableName} (\n${lines.join(",\n")}\n);\n`;
+        return `CREATE TABLE ${tableName} (\n${[...lines, ...constraints].join(",\n")}\n);`;
     }
 
     FormulaVisitor.prototype.hasCreated = function(tableName) {
@@ -104,12 +120,19 @@ var FormulaVisitor = (function (_super) {
             REFERENCES ${context.VARIABLE(1)} (ID)
 ;`
         } */else if (context.DECLARE()) {
+            var annotation = context.annotation().accept(this);
             var currentSchemaVariableName = context.DECLARATION();
             var oldValue = this.getVariable(currentSchemaVariableName);
             if (oldValue) {
                 throw `Variable "${currentSchemaVariableName}" already declared`;
             } else {
-                this.setVariable(currentSchemaVariableName, context.tableSchema().accept(this));
+                //CONSTRAINT PK_BILLING_CATEGORY PRIMARY KEY (ID),
+                var assigned = context.tableSchema().accept(this);
+                if (annotation) {
+                    assigned = [...assigned, annotation]
+                } 
+                //console.log(assigned);
+                this.setVariable(currentSchemaVariableName, assigned);
             }
         }
     };
@@ -155,6 +178,12 @@ var FormulaVisitor = (function (_super) {
 
     FormulaVisitor.prototype.visitSize = function(context) {
         return context.INT().join(",");
+    };
+
+    FormulaVisitor.prototype.visitAnnotation = function(context) {
+        var pkAnnotation = context.PK_ANNOTATION();
+        var pkKey = context.DECLARATION();
+        return pkAnnotation && pkKey ? {[`${pkAnnotation}`]: `${pkKey}`} : null;
     };
 
     return FormulaVisitor;
