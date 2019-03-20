@@ -92,13 +92,15 @@ var FormulaVisitor = (function (_super) {
                 if (value) {
                     var merged = [...schema, ...value];
                     var names = merged.map(item => item.name);
-                    names.forEach((name, i) => {
-                        names.forEach((check, j) => {
-                            if (name == check && i != j) {
+
+                    for (var i = 0; i < names.length; i++) {
+                        for (var j = 0; j < names.length; j++) {
+                            if (names[i] == names[j] && i != j) {
                                 throw `${name} should only be in either base schema or inheriting schema`;
                             }
-                        });
-                    });
+                        }
+                    }
+
                     return this.createTable(create, merged);
                 } else {
                     throw `${create} not defined`
@@ -120,7 +122,8 @@ var FormulaVisitor = (function (_super) {
             REFERENCES ${context.VARIABLE(1)} (ID)
 ;`
         } */else if (context.DECLARE()) {
-            var annotation = context.annotation().accept(this);
+            var annotation = context.annotations().accept(this);
+            console.log(annotation);
             var currentSchemaVariableName = context.DECLARATION();
             var oldValue = this.getVariable(currentSchemaVariableName);
             if (oldValue) {
@@ -180,10 +183,27 @@ var FormulaVisitor = (function (_super) {
         return context.INT().join(",");
     };
 
+    FormulaVisitor.prototype.visitAnnotations = function(context) {
+        return context.annotation().map((annotation, i) => `${annotation.accept(this)} ${context.DECLARATION(i)}`);
+
+        
+
+       //console.log(`! ${context.NOTNULL_ANNOTATION()} ${context.PK_ANNOTATION()} ${context.DECLARATION().length}`);
+
+        // var pkAnnotation = context.PK_ANNOTATION();
+        // var pkKey = context.DECLARATION();
+        // return pkAnnotation && pkKey ? {[`${pkAnnotation}`]: `${pkKey}`} : null;
+    };
+
+    
     FormulaVisitor.prototype.visitAnnotation = function(context) {
-        var pkAnnotation = context.PK_ANNOTATION();
-        var pkKey = context.DECLARATION();
-        return pkAnnotation && pkKey ? {[`${pkAnnotation}`]: `${pkKey}`} : null;
+        if (context.PK_ANNOTATION()) {
+            return `${context.PK_ANNOTATION()}`;
+        } else if (context.NOTNULL_ANNOTATION()) {
+            return `${context.NOTNULL_ANNOTATION()}`;
+        } else if (context.NUMERIC_ANNOTATION()) {
+            return `${context.NUMERIC_ANNOTATION()}`;
+        }
     };
 
     return FormulaVisitor;

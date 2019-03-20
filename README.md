@@ -9,3 +9,10 @@ javac Calculator*.java
 java org.antlr.v4.gui.TestRig Calculator input
 pause
 ```
+
+
+### TODO
+* Insert Script creation
+* Java Class Generation with hibernate validator?
+* GUI for diagram
+* Template Schema

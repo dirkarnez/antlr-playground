@@ -2,12 +2,14 @@ grammar RMLang;
 	
 prog:	(expr ';' NEWLINE*)+;
 
-expr: annotation DECLARE DECLARATION '=' tableSchema
+expr: annotations DECLARE DECLARATION '=' tableSchema
     | USING DECLARATION '{' createStatementList '}'
     | CREATE DECLARATION
     ;
 
-annotation: ('@' PK_ANNOTATION '(' DECLARATION ')' NEWLINE*)?;
+annotations: ('@' annotation  '(' DECLARATION (',' DECLARATION)* ')' NEWLINE*)*;
+
+annotation: PK_ANNOTATION | NOTNULL_ANNOTATION | NUMERIC_ANNOTATION;
 
 createStatementList:  (CREATE DECLARATION NEWLINE* ';' NEWLINE*)+;
 
@@ -17,7 +19,7 @@ tableSchema
     ;
 
 pair:  DECLARATION ':' 
-    ( VARCHAR '(' size ')' 
+    ( VARCHAR '(' size ')'
     | VARCHAR2 '(' size ')'
     | RAW '(' size ')'
     | NUMBER'(' size ')'
@@ -26,6 +28,8 @@ pair:  DECLARATION ':'
 
 size: INT (',' INT)?;
 PK_ANNOTATION: [Pp][Kk];
+NOTNULL_ANNOTATION: [Nn][Oo][Tt][Nn][Uu][Ll][Ll];
+NUMERIC_ANNOTATION: [Nn][Uu][Mm][Ee][Rr][Ii][Cc];
 DECLARE: [Dd][Ee][Cc][Ll][Aa][Rr][Ee];
 VARCHAR: [Vv][Aa][Rr][Cc][Hh][Aa][Rr];
 VARCHAR2: [Vv][Aa][Rr][Cc][Hh][Aa][Rr][2];
@@ -37,6 +41,7 @@ CREATE:	[Cc][Rr][Ee][Aa][Tt][Ee];
 DECLARATION: [a-zA-Z_]+;
 INT: [0-9]+;
 
+
 NEWLINE : [\r\n]+;
 
 
@@ -44,57 +49,3 @@ WS  :   [ \t\r\n]+ -> skip ;
 BLOCK_COMMENT 
     : NEWLINE* '/*' .*? '*/' NEWLINE* -> skip
     ;
-
-
-
-
-
-
-
-
-
-
-
-// grammar RMLang;
-	
-// prog:	(expr ';' NEWLINE?)+;
-
-// expr:	USE TABLESCHEMA
-//     |   CREATE TABLENAME
-//     |   RELATE TABLENAME TABLENAME
-   
-//     ;
-// NEWLINE : [\r\n]+;
-// USE:	[Uu][Ss][Ee];
-// CREATE:	[Cc][Rr][Ee][Aa][Tt][Ee];
-// RELATE:	[Rr][Ee][Ll][Aa][Tt][Ee];
-
-// TABLENAME: [a-zA-Z]+;
-// WS  :   [ \t\n\r]+ -> skip ;
-// prog: command;
-
-// command
-//     :  TARGET ';'
-//     ;
-
-
-// TARGET
-//     : TABLENAME
-//     ;
-
-// // expr:	expr ('*'|'/') expr
-// //     |	expr ('+'|'-') expr
-// //     |	INT
-// //     |	'(' expr ')'
-// //     ;
-
-// TABLENAME: [a-zA-Z]+;
-// CREATE:	[Cc][Rr][Ee][Aa][Tt][Ee];
-// RELATE:	[Rr][Ee][Ll][Aa][Tt][Ee];
-
-
-
-// // Match both UNIX and Windows newlines
-// NL      :   '\r'? '\n' ;
-
-// WS  :   [ \t\n\r]+ -> skip ;
