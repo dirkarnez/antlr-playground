@@ -24,9 +24,8 @@ program
         parser.buildParseTrees = true;  
         var tree = parser.prog();
         
-        var visitor = new formulaVisitor();
         try {
-            console.log(visitor.visitProg(tree));
+            console.log(new formulaVisitor().visitProg(tree));
         } catch(e) {
             console.log(e);
         }

@@ -81,31 +81,43 @@ var FormulaVisitor = (function (_super) {
                 throw `${schemaName} not defined`
             }
 
-            var created = context.createStatementList().accept(this).map(create => {
-                if (this.hasCreated(create)) {
-                    throw `${create} should not be created more than once`;
-                }
-                if (create == schemaName) {
-                    throw `${create} should not inherit itself`;
-                }
-                var value = this.getVariable(create);
-                if (value) {
-                    var merged = [...schema, ...value];
-                    var names = merged.map(item => item.name);
-
-                    for (var i = 0; i < names.length; i++) {
-                        for (var j = 0; j < names.length; j++) {
-                            if (names[i] == names[j] && i != j) {
-                                throw `${name} should only be in either base schema or inheriting schema`;
-                            }
-                        }
+            var created = context
+                .createStatementList()
+                .accept(this)
+                .map(create => {
+                    if (this.hasCreated(create)) {
+                        throw `${create} should not be created more than once`;
                     }
 
-                    return this.createTable(create, merged);
-                } else {
-                    throw `${create} not defined`
-                }
-            })
+                    if (create == schemaName) {
+                        throw `${create} should not inherit itself`;
+                    }
+
+                    console.log(`@@@@@@ ${create}`);
+
+                    var value = this.getVariable(create);
+
+                    if (value) {
+                        var merged = [...schema, ...value];
+
+                        console.log(merged);
+                        
+                        var names = merged.map(item => item.name);
+
+                        for (var i = 0; i < names.length; i++) {
+                            for (var j = 0; j < names.length; j++) {
+                                if (names[i] == names[j] && i != j) {
+                                    throw `${name} should only be in either base schema or inheriting schema`;
+                                }
+                            }
+                        }
+
+                        return this.createTable(create, merged);
+                    } else {
+                        throw `${create} not defined`
+                    }
+                });
+
             console.log(created.join("\n\n"));
         } else if (context.CREATE()) {
             var tableName = context.DECLARATION();
@@ -123,7 +135,7 @@ var FormulaVisitor = (function (_super) {
 ;`
         } */else if (context.DECLARE()) {
             var annotation = context.annotations().accept(this);
-            console.log(annotation);
+            //console.log(`!!! ${annotation}`);
             var currentSchemaVariableName = context.DECLARATION();
             var oldValue = this.getVariable(currentSchemaVariableName);
             if (oldValue) {
@@ -131,11 +143,9 @@ var FormulaVisitor = (function (_super) {
             } else {
                 //CONSTRAINT PK_BILLING_CATEGORY PRIMARY KEY (ID),
                 var assigned = context.tableSchema().accept(this);
-                if (annotation) {
-                    assigned = [...assigned, annotation]
-                } 
+
                 //console.log(assigned);
-                this.setVariable(currentSchemaVariableName, assigned);
+                this.setVariable(currentSchemaVariableName, { fields: assigned, annotations: annotation});
             }
         }
     };
@@ -184,7 +194,7 @@ var FormulaVisitor = (function (_super) {
     };
 
     FormulaVisitor.prototype.visitAnnotations = function(context) {
-        return context.annotation().map((annotation, i) => `${annotation.accept(this)} ${context.DECLARATION(i)}`);
+        return context.annotation().map((annotation, i) => `${annotation.accept(this)}: ${context.DECLARATION(i)}`);
 
         
 
